@@ -33,18 +33,16 @@ public class SimpleTestCase {
   public ProcessEngineRule rule = new ProcessEngineRule();
 
   @Test
-  @Deployment(resources = {"topPMIProcess.bpmn", "testProcess.bpmn"})
+  @Deployment(resources = {"topProcess.bpmn", "testProcess.bpmn"})
   public void shouldExecuteProcess() {
     // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("topPMIProcess");
+    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("topProcess","myBusinessKey");
     // Then it should be active
     assertThat(processInstance).isActive();
     // And it should be 3 instances (1 for top process and 2 for called process)
     assertThat(processInstanceQuery().count()).isEqualTo(3);
     
-    // When we complete that task of testProcess #1
-    complete(task(processInstanceQuery().processDefinitionKey("testProcess").list().get(0)));
-    // When we complete that task of testProcess #2
+    // When we complete that task of testProcess the flow throws Cancel Parent Instance event.
     complete(task(processInstanceQuery().processDefinitionKey("testProcess").list().get(0)));
     // Then the process instance should be ended
     assertThat(processInstance).isEnded();
