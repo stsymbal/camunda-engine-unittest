@@ -20,6 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.camunda.bpm.engine.test.assertions.ProcessEngineAssertions.assertThat;
 import static org.camunda.bpm.engine.test.assertions.ProcessEngineTests.*;
 
+import java.util.List;
+
+import javax.script.ScriptEngine;
+
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+import org.camunda.bpm.engine.impl.scripting.engine.ScriptingEngines;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -29,23 +35,25 @@ import org.junit.Test;
  */
 public class SimpleTestCase {
 
+  protected static final String SCRIPT = "println 'hello world'";
+
   @Rule
   public ProcessEngineRule rule = new ProcessEngineRule();
 
   @Test
-  @Deployment(resources = {"topProcess.bpmn", "testProcess.bpmn"})
-  public void shouldExecuteProcess() {
+  @Deployment(resources = {"testProcess.bpmn"})
+  public void evalGroovyWithInstanceData() {
     // Given we create a new process instance
-    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("topProcess","myBusinessKey");
+    ProcessInstance processInstance = runtimeService().startProcessInstanceByKey("testProcess","myBusinessKey");
     // Then it should be active
     assertThat(processInstance).isActive();
-    // And it should be 3 instances (1 for top process and 2 for called process)
-    assertThat(processInstanceQuery().count()).isEqualTo(3);
-    
-    // When we complete that task of testProcess the flow throws Cancel Parent Instance event.
-    complete(task(processInstanceQuery().processDefinitionKey("testProcess").list().get(0)));
-    // Then the process instance should be ended
-    assertThat(processInstance).isEnded();
+    //get executions to pull the instance variables from
+    //List<ExecutionEntity> executions = (List<ExecutionEntity>)(List<?>)runtimeService().createExecutionQuery().processInstanceId(processInstance.getId()).list();
+    //getting groovy scripting engine outside of ProcessInstance
+
+    ScriptingEngines scriptingEngines = rule.getProcessEngineConfiguration().getScriptingEngines();
+    ScriptEngine groovyScriptEngine = scriptingEngines.getScriptEngineForLanguage("groovy");
+    //TODO: execute groovy script with instance execution's variables available
   }
 
 }
